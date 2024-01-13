@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.css": "/static/css/main.3c6b80c0.css",
-    "main.js": "/static/js/main.550d9f83.js",
-    "index.html": "/index.html",
-    "main.3c6b80c0.css.map": "/static/css/main.3c6b80c0.css.map",
-    "main.550d9f83.js.map": "/static/js/main.550d9f83.js.map"
+    "main.css": "/packing-app/static/css/main.3c6b80c0.css",
+    "main.js": "/packing-app/static/js/main.550d9f83.js",
+    "index.html": "/packing-app/index.html",
+    "main.3c6b80c0.css.map": "/packing-app/static/css/main.3c6b80c0.css.map",
+    "main.550d9f83.js.map": "/packing-app/static/js/main.550d9f83.js.map"
   },
   "entrypoints": [
     "static/css/main.3c6b80c0.css",
