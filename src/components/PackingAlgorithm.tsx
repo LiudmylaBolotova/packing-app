@@ -1,97 +1,91 @@
-// PackingAlgorithm.tsx
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './PackingAlgorithm.css';
 
 interface Block {
   width: number;
   height: number;
   quantity: number;
-  usedArea?: number;
 }
 
-const sheetWidth = 20;
-const sheetHeight = 40;
-const maxSheetArea = sheetWidth * sheetHeight;
+interface Sheet {
+  blocks: Block[];
+  filledArea: number;
+}
 
+const maxSheetArea = 800;
 const blocks: Block[] = [
   { width: 5, height: 7, quantity: 50 },
   { width: 3, height: 4.5, quantity: 70 },
   { width: 9, height: 2, quantity: 50 },
 ];
 
-const calculateBlockArea = (block: Block) => block.width * block.height;
-
-const findBestFit = (remainingBlocks: Block[], remainingSheetArea: number): Block[] | null => {
-  for (const block of remainingBlocks) {
-    if (block.quantity > 0 && calculateBlockArea(block) <= remainingSheetArea) {
-      return [block];
-    }
-  }
-  return null;
-};
-
 const PackingAlgorithm: React.FC = () => {
-  const arrangeBlocks = () => {
-    let remainingBlocks = [...blocks];
-    let sheets: Block[][] = [];
+  const [sheets, setSheets] = useState<Sheet[]>([]);
 
-    while (remainingBlocks.length > 0) {
-      let currentSheet: Block[] = [];
-      let remainingSheetArea = maxSheetArea;
+  useEffect(() => {
+    calculateSheetCountAndArrangement();
+  }, []);
 
-      let block = findBestFit(remainingBlocks, remainingSheetArea);
+  const calculateSheetCountAndArrangement = () => {
+    let remainingBlocks: Block[] = [...blocks];
+    let calculatedSheets: Sheet[] = [];
 
-      while (block !== null) {
-        const [fittingBlock] = block;
-        const blockArea = calculateBlockArea(fittingBlock);
-        currentSheet.push({ ...fittingBlock, usedArea: blockArea, quantity: 1 });
-        remainingSheetArea -= blockArea;
-        fittingBlock.quantity--;
+    while (remainingBlocks.some(block => block.quantity > 0)) {
+      let currentSheetArea = 0;
+      let currentSheetBlocks: Block[] = [];
 
-        block = findBestFit(remainingBlocks, remainingSheetArea);
+      remainingBlocks.sort((a, b) => b.width * b.height - a.width * a.height);
+
+      for (let i = 0; i < remainingBlocks.length; i++) {
+        const block = remainingBlocks[i];
+        const blockArea = block.width * block.height;
+
+        if (currentSheetArea + blockArea <= maxSheetArea && block.quantity > 0) {
+          const blocksToAdd = Math.min(
+            Math.floor((maxSheetArea - currentSheetArea) / blockArea),
+            block.quantity
+          );
+
+          currentSheetArea += blocksToAdd * blockArea;
+          remainingBlocks[i].quantity -= blocksToAdd;
+
+          for (let j = 0; j < blocksToAdd; j++) {
+            currentSheetBlocks.push({ ...block, quantity: 1 });
+          }
+        }
       }
 
-      if (currentSheet.length === 0) {
-        // Unable to fit any remaining block on the sheet
+      if (currentSheetBlocks.length > 0) {
+        calculatedSheets.push({ blocks: currentSheetBlocks, filledArea: currentSheetArea });
+      } else {
         break;
       }
-
-      sheets.push(currentSheet);
     }
 
-    return sheets;
+    setSheets(calculatedSheets);
   };
-
-  const getBlockSummary = (sheet: Block[]) => {
-    const summary: Record<string, number> = {};
-    sheet.forEach((block) => {
-      const key = `${block.width} x ${block.height}`;
-      summary[key] = (summary[key] || 0) + block.quantity;
-    });
-    return summary;
-  };
-
-  const sheets = arrangeBlocks();
 
   return (
-    <div className="container">
+    <div>
       {sheets.map((sheet, index) => (
-        <div key={index} className="sheet">
-          <div className="sheet-title">Sheet {index + 1}</div>
-          <div className="block-summary">
-            <p className="summary">
-              Block Summary:
-            </p>
-            <ul>
-              {Object.entries(getBlockSummary(sheet)).map(([size, count], summaryIndex) => (
-                <li key={summaryIndex}>{`${count} - ${size}`}</li>
-              ))}
-            </ul>
+        <div key={index} className="sheet-container">
+          <h3 className="sheet-header">Sheet {index + 1}</h3>
+          <p className="filled-area-info">Filled Area: {sheet.filledArea} sq. inches</p>
+          <div className="block-container">
+            {sheet.blocks.map((block, blockIndex) => (
+              <div
+                key={blockIndex}
+                className={`block block-${block.width}`}
+                style={{
+                  width: `${block.width * 20}px`,
+                  height: `${block.height * 20}px`,
+                }}
+              >
+                {block.width}x{block.height}
+              </div>
+            ))}
           </div>
-          <p className="total-used-area">
-            Total Used Area: {sheet.reduce((total, block) => total + (block.usedArea || 0), 0)} square inches
-          </p>
         </div>
       ))}
     </div>
@@ -99,7 +93,3 @@ const PackingAlgorithm: React.FC = () => {
 };
 
 export default PackingAlgorithm;
-
-
-
-
